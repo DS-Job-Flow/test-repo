@@ -132,7 +132,6 @@ def Wanted(KEYWORD):
     })
     keyword_csv_file = f'{path}/{KEYWORD}.csv'
     df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
-    df = pd.read_csv(keyword_csv_file)
 
     return Tit, Com, Ctn, Lin, Loc
 
