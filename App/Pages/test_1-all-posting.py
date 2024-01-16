@@ -4,8 +4,12 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
+from urllib.request import Request, urlopen, HTTPError
+import re
 
 path = './Data'
 
@@ -56,7 +60,7 @@ def elem_return_1(Name, List):
 def Wanted(KEYWORD):
 
     # webdriver 실행
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     driver.get(f'https://www.wanted.co.kr/search?query={KEYWORD}&tab=position')
     driver.implicitly_wait(2)
     scroll(driver)
