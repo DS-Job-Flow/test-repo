@@ -140,6 +140,111 @@ def Wanted(KEYWORD):
 
     return Tit, Com, Ctn, Lin, Loc
 
+## 사람인 수집
+def Saramin(KEYWORD):
+    
+    # 데이터 수집
+    Lin = [] # 링크
+    Tit = [] # 타이틀
+    Com = [] # 회사
+    Loc = [] # 위치
+    page = 1
+
+    front_url = 'https://www.saramin.co.kr/zf_user/search?search_area=main&search_done=y&search_optional_item=n&searchType=search&searchword='
+    mid_url = '&recruitPage='
+    back_url = '&recruitSort=relation&recruitPageCount=100&inner_com_type=&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&show_applied=&quick_apply=n&except_read=n&ai_head_hunting=n&mainSearch=y'
+
+    # webdriver 실행
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    driver.get(front_url+KEYWORD+mid_url+str(page)+back_url)
+    driver.implicitly_wait(2)
+
+    # keyword 채용공고 확인 후 전체 페이지 수
+    ct_result = driver.find_element(By.XPATH, '//*[@id="recruit_info"]/div[1]/span').text
+    total_result = re.sub(r'[^0-9]', '', ct_result)
+    page_ct = int(int(total_result)/100)
+
+    # 검색 키워드 출력
+    print(f'\n\n##### {KEYWORD} #####')
+
+    # 공고 개수
+    for pages in range(1, page_ct+2):
+        try:
+            driver.get(front_url+KEYWORD+mid_url+str(pages)+back_url)
+            driver.implicitly_wait(2)
+
+            div_1 = driver.find_elements(By.CLASS_NAME, "job_tit")
+            for item in div_1:
+                
+                #링크
+                p_0 = item.find_element(By.TAG_NAME, "a").get_attribute('href')
+                Lin.append(p_0)
+
+                #타이틀
+                p_1 = item.find_element(By.TAG_NAME, "a").text
+                Tit.append(p_1)
+
+            # 회사
+            div_2 = driver.find_elements(By.CLASS_NAME, "corp_name")
+            for item in div_2:
+                p_2 = item.find_element(By.TAG_NAME, "a").text
+                Com.append(p_2)
+            
+            #위치
+            div_3 = driver.find_elements(By.CLASS_NAME, "job_condition")
+            for item in div_3:
+                tmp_loc = item.find_element(By.TAG_NAME, "a").text
+                p_3 = tmp_loc[:2]
+                Loc.append(p_3)
+             
+        except Exception as e:
+            st.write(e)
+            break
+
+    # 데이터 출력
+    elem_return_0('링크', Lin)
+    elem_return_0('타이틀', Tit)
+    elem_return_0('회사', Com)
+    elem_return_0('위치', Loc)
+
+    # 데이터 수집
+    Ctn = [] # 공고내용
+
+    for i in Lin:
+        driver.get(i)
+        driver.implicitly_wait(2)
+        scroll_one(driver)
+
+        # 공고내용
+        try:
+            driver.switch_to.frame("iframe_content_0")
+            p_4 = driver.find_element(By.CLASS_NAME, "user_content").text
+            Ctn.append(p_4)
+
+        except Exception as e:
+            st.write(e)
+            break
+
+    driver.close()
+
+    # 데이터 출력
+    elem_return_1('공고내용', Ctn)
+
+    # 데이터프레임 생성
+    df = pd.DataFrame({
+        'Title' : Tit,
+        'Company' : Com,
+        'Content' : Ctn,   
+        'Link' : Lin,
+        'Location' : Loc,
+        'label' : f'{KEYWORD}'         
+    })
+    keyword_csv_file = f'{path}/{KEYWORD}.csv'
+    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+    df = pd.read_csv(keyword_csv_file)
+
+    return Tit, Com, Ctn, Lin, Loc
+
 
 ## 채용공고 아웃풋
 def posting_output(df, posting):
