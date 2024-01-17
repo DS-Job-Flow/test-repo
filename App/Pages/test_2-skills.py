@@ -1,8 +1,8 @@
+import openai
 import time
 import pandas as pd
 import streamlit as st
 from datetime import datetime
-from openai import OpenAI
 
 
 path = './Data'
@@ -26,10 +26,29 @@ except FileNotFoundError:
     st.error('생성된 파일이 없습니다. ALL Posting 페이지에서 크롤링 실행 버튼을 눌러주세요.')
 
 
-## OpenAI API
-ORGANIZATION_ID = 'org-xxx' # 개인 ID 필요
-OPENAI_API_KEY = 'sk-xxx' # 개인 API KEY 필요
-client = OpenAI(
+# OpenAI API 키 입력 섹션
+st.write("""
+### API 키 입력
+""", unsafe_allow_html=True)
+ORGANIZATION_ID = st.text_input('Organization ID 입력:')
+OPENAI_API_KEY = st.text_input('OpenAI API 키 입력:', type="password")
+
+# API 키 저장 및 확인 버튼
+if st.button('적용'):
+    try:
+        # OpenAI 라이브러리를 사용하여 API 키 설정
+        openai.api_key = OPENAI_API_KEY
+
+        # 간단한 요청으로 키 검증 (예: 리스트 엔진)
+        response = openai.Engine.list()
+
+        # 성공 메시지 표시
+        st.success('API 키가 유효합니다.')
+    except Exception as e:
+        # 오류 메시지 표시
+        st.error(f'API 키 검증 실패: {e}')
+
+client = openai(
     organization = ORGANIZATION_ID,
     api_key = OPENAI_API_KEY
 )
