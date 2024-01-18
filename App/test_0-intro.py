@@ -150,7 +150,8 @@ def Wanted(KEYWORD):
         'Content' : Ctn,   
         'Link' : Lin,
         'Location' : Loc,
-        'label' : f'{KEYWORD}'         
+        'label' : f'{KEYWORD}',
+        'platform': 'wanted',         
     })
     keyword_csv_file = f'{path}/{KEYWORD}.csv'
     df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
