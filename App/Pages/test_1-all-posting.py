@@ -28,10 +28,11 @@ st.title('오늘의 채용공고')
 st.write('')
 
 def make_dict():
-    data = {'Lin': [], 'Tit': [], 'Com': [], 'Loc': [], 'Ctn': []}
+    data_wanted = {'Lin': [], 'Tit': [], 'Com': [], 'Loc': [], 'Ctn': []}
+    data_saramin = {'Lin': [], 'Tit': [], 'Com': [], 'Loc': [], 'Ctn': []}
     data_major = {'Lin': [], 'Tit': [], 'Com': [], 'Loc': [], 'Ctn': []}
 
-    return data, data_major
+    return data_wanted, data_saramin, data_major
 
 ## 스크롤 끝까지
 def scroll(driver):
@@ -63,9 +64,8 @@ def elem_return_0(Name, List):
 def elem_return_1(Name, List):
     return print(f'\n{Name} *** {len(List)}')
 
-
 ## 원티드 수집
-def Wanted(KEYWORD, data):
+def Wanted(KEYWORD, data_wanted):
 
     # webdriver 실행
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
@@ -83,33 +83,30 @@ def Wanted(KEYWORD, data):
         try:
             # 링크
             p_0 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a').get_attribute('href')
-            data['Lin'].append(p_0)                       
+            data_wanted['Lin'].append(p_0)                       
 
             # 타이틀
             p_1 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/strong').text
-            data['Tit'].append(p_1)
+            data_wanted['Tit'].append(p_1)
 
             # 회사
             p_2 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/span[1]/span[1]').text
-            data['Com'].append(p_2)                       
+            data_wanted['Com'].append(p_2)                       
 
             # 위치
             p_3 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/span[1]/span[2]').text
-            data['Loc'].append(p_3)                    
+            data_wanted['Loc'].append(p_3)                    
         except Exception as e:
             st.write(e)
             break
 
     # 데이터 출력
-    elem_return_0('링크', data['Lin'])
-    elem_return_0('타이틀', data['Tit'])
-    elem_return_0('회사', data['Com'])
-    elem_return_0('위치', data['Loc'])
+    elem_return_0('링크', data_wanted['Lin'])
+    elem_return_0('타이틀', data_wanted['Tit'])
+    elem_return_0('회사', data_wanted['Com'])
+    elem_return_0('위치', data_wanted['Loc'])
 
-    # 데이터 수집
-    Ctn = [] # 공고내용
-
-    for i in data['Lin']:
+    for i in data_wanted['Lin']:
         driver.get(i)
         driver.implicitly_wait(2)
         scroll_one(driver)
@@ -117,7 +114,7 @@ def Wanted(KEYWORD, data):
         # 공고내용
         try:
             p_4 = driver.find_element(By.CLASS_NAME, 'JobDescription_JobDescription__VWfcb').text
-            data['Ctn'].append(p_4)
+            data_wanted['Ctn'].append(p_4)
         except Exception as e:
             st.write(e)
             break
@@ -125,23 +122,24 @@ def Wanted(KEYWORD, data):
     driver.close()
 
     # 데이터 출력
-    elem_return_1('공고내용', Ctn)
+    elem_return_1('공고내용', data_wanted['Ctn'])
 
     # 데이터프레임 생성
-    df = pd.DataFrame({
-        'Title' : data['Tit'],
-        'Company' : data['Com'],
-        'Content' : data['Ctn'],   
-        'Link' : data['Lin'],
-        'Location' : data['Loc'],
+    df_wanted = pd.DataFrame({
+        'Title' : data_wanted['Tit'],
+        'Company' : data_wanted['Com'],
+        'Content' : data_wanted['Ctn'],   
+        'Link' : data_wanted['Lin'],
+        'Location' : data_wanted['Loc'],
         'label' : f'{KEYWORD}'         
     })
-    keyword_csv_file = f'{path}/{KEYWORD}.csv'
-    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
-    df = pd.read_csv(keyword_csv_file)
+    keyword_csv_file = f'{path}/{KEYWORD}_wanted.csv'
+    df_wanted.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+    df_wanted = pd.read_csv(keyword_csv_file)
+    
+    return data_wanted
 
-    return data
-
+## 사람인, 대기업 수집
 def Saramin_logic(front_url, mid_url, back_url, page, data):
 
     # webdriver 실행
@@ -187,17 +185,33 @@ def Saramin_logic(front_url, mid_url, back_url, page, data):
                 p_3 = tmp_loc[:2]
                 data['Loc'].append(p_3)
              
+            # 데이터 출력
+            elem_return_0('링크', data['Lin'])
+            elem_return_0('타이틀', data['Tit'])
+            elem_return_0('회사', data['Com'])
+            elem_return_0('위치', data['Loc'])
+
         except Exception as e:
             st.write(e)
             break
 
-    # 데이터 출력
-    elem_return_0('링크', data['Lin'])
-    elem_return_0('타이틀', data['Tit'])
-    elem_return_0('회사', data['Com'])
-    elem_return_0('위치', data['Loc'])
+    return data
 
-    for i in data['Lin']:
+## 사람인 수집
+def Saramin(KEYWORD, data_saramin):
+    
+    page = 1
+
+    front_url = 'https://www.saramin.co.kr/zf_user/search?search_area=main&search_done=y&search_optional_item=n&searchType=search&searchword='
+    mid_url = '&recruitPage='
+    back_url = '&recruitSort=relation&recruitPageCount=100&inner_com_type=&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&show_applied=&quick_apply=n&except_read=n&ai_head_hunting=n&mainSearch=y'
+
+    data_saramin = Saramin_logic(front_url, mid_url, back_url, page, data_saramin)
+
+    # webdriver 실행
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+
+    for i in data_saramin['Lin']:
         driver.get(i)
         driver.implicitly_wait(2)
         scroll_one(driver)
@@ -206,7 +220,7 @@ def Saramin_logic(front_url, mid_url, back_url, page, data):
         try:
             driver.switch_to.frame("iframe_content_0")
             p_4 = driver.find_element(By.CLASS_NAME, "user_content").text
-            data['Ctn'].append(p_4)
+            data_saramin['Ctn'].append(p_4)
 
         except Exception as e:
             st.write(e)
@@ -215,37 +229,23 @@ def Saramin_logic(front_url, mid_url, back_url, page, data):
     driver.close()
 
     # 데이터 출력
-    elem_return_1('공고내용', data['Ctn'])
+    elem_return_1('공고내용', data_saramin['Ctn'])
 
-    return data
-
-
-## 사람인 수집
-def Saramin(KEYWORD, data):
-    
-    page = 1
-
-    front_url = 'https://www.saramin.co.kr/zf_user/search?search_area=main&search_done=y&search_optional_item=n&searchType=search&searchword='
-    mid_url = '&recruitPage='
-    back_url = '&recruitSort=relation&recruitPageCount=100&inner_com_type=&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&show_applied=&quick_apply=n&except_read=n&ai_head_hunting=n&mainSearch=y'
-
-    Saramin_logic(front_url, mid_url, back_url, page, data)
-
-    # 데이터프레임 생성
-    df = pd.DataFrame({
-        'Title' : data['Tit'],
-        'Company' : data['Com'],
-        'Content' : data['Ctn'],   
-        'Link' : data['Lin'],
-        'Location' : data['Loc'],
+        # 데이터프레임 생성
+    df_saramin = pd.DataFrame({
+        'Title' : data_saramin['Tit'],
+        'Company' : data_saramin['Com'],
+        'Content' : data_saramin['Ctn'],   
+        'Link' : data_saramin['Lin'],
+        'Location' : data_saramin['Loc'],
         'label' : f'{KEYWORD}'         
     })
 
-    keyword_csv_file = f'{path}/{KEYWORD}.csv'
-    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
-    df = pd.read_csv(keyword_csv_file)
+    keyword_csv_file = f'{path}/{KEYWORD}_saramin.csv'
+    df_saramin.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+    df_saramin = pd.read_csv(keyword_csv_file)
 
-    return data
+    return data_saramin
 
 ## 대기업 수집
 def Major(KEYWORD, data_major):
@@ -256,10 +256,33 @@ def Major(KEYWORD, data_major):
     mid_url = '&recruitPage='
     back_url = '&recruitSort=relation&recruitPageCount=100&inner_com_type=&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&company_type=scale001&show_applied=&quick_apply=n&except_read=n&ai_head_hunting=n&mainSearch=y'
 
-    Saramin_logic(front_url, mid_url, back_url, page, data_major)
+    data_major = Saramin_logic(front_url, mid_url, back_url, page, data_major)
 
-    # 데이터프레임 생성
-    df = pd.DataFrame({
+    # webdriver 실행
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+
+    for i in data_major['Lin']:
+        driver.get(i)
+        driver.implicitly_wait(2)
+        scroll_one(driver)
+
+        # 공고내용
+        try:
+            driver.switch_to.frame("iframe_content_0")
+            p_4 = driver.find_element(By.CLASS_NAME, "user_content").text
+            data_major['Ctn'].append(p_4)
+
+        except Exception as e:
+            st.write(e)
+            break
+
+    driver.close()
+
+    # 데이터 출력
+    elem_return_1('공고내용', data_major['Ctn'])
+
+        # 데이터프레임 생성
+    df_major = pd.DataFrame({
         'Title' : data_major['Tit'],
         'Company' : data_major['Com'],
         'Content' : data_major['Ctn'],   
@@ -269,8 +292,8 @@ def Major(KEYWORD, data_major):
     })
 
     keyword_csv_file = f'{path}/{KEYWORD}_major.csv'
-    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
-    df = pd.read_csv(keyword_csv_file)
+    df_major.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+    df_major = pd.read_csv(keyword_csv_file)
 
     return data_major
 
@@ -288,17 +311,19 @@ KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 
 # 빈 파일 생성
 now_csv_file = f'{path}/{now_name}.csv'
+now_csv_file_major = f'{path}/{now_name}_major.csv'
 
 # 버튼 클릭
 if st.button('크롤링 실행'):
     if not os.path.exists(now_csv_file):
-        data, data_major = make_dict()
+        data_wanted, data_saramin, data_major = make_dict()
         # 크롤링 시작 
         st_info = st.info('크롤링 진행 중')
         for KEYWORD in KEYWORDS:
-            data = Wanted(KEYWORD, data)
-            data = Saramin(KEYWORD, data)
+            data_wanted = Wanted(KEYWORD, data_wanted)
+            data_saramin = Saramin(KEYWORD, data_saramin)
             data_major = Major(KEYWORD, data_major)
+        
 
         time.sleep(1)
         st_info.empty()
@@ -310,9 +335,17 @@ if st.button('크롤링 실행'):
         # merge
         st_info = st.info('데이터 처리 중')
 
-        DA = pd.read_csv(f'{path}/{KEYWORDS[0]}.csv')
-        DS = pd.read_csv(f'{path}/{KEYWORDS[1]}.csv')
-        df = pd.concat([DA, DS], axis=0)
+        DA_major = pd.read_csv(f'{path}/{KEYWORDS[0]}_major.csv')
+        DS_major = pd.read_csv(f'{path}/{KEYWORDS[1]}_major.csv')
+        df = pd.concat([DA_major, DS_major], axis=0)
+        df.to_csv(now_csv_file_major, index=False, encoding='utf-8-sig')
+        df = pd.read_csv(now_csv_file_major)
+
+        DA_wanted = pd.read_csv(f'{path}/{KEYWORDS[0]}_wanted.csv')
+        DS_wanted = pd.read_csv(f'{path}/{KEYWORDS[1]}_wanted.csv')
+        DA_saramin = pd.read_csv(f'{path}/{KEYWORDS[0]}_saramin.csv')
+        DS_saramin = pd.read_csv(f'{path}/{KEYWORDS[1]}_saramin.csv')
+        df = pd.concat([DA_wanted, DS_wanted, DA_saramin, DS_saramin], axis=0)
         df.to_csv(now_csv_file, index=False, encoding='utf-8-sig')
         df = pd.read_csv(now_csv_file)
 
@@ -329,8 +362,12 @@ if st.button('크롤링 실행'):
         st_success.empty()
 
         # file remove
-        os.remove(f'{path}/{KEYWORDS[0]}.csv')
-        os.remove(f'{path}/{KEYWORDS[1]}.csv')
+        os.remove(f'{path}/{KEYWORDS[0]}_major.csv')
+        os.remove(f'{path}/{KEYWORDS[1]}_major.csv')
+        os.remove(f'{path}/{KEYWORDS[0]}_wanted.csv')
+        os.remove(f'{path}/{KEYWORDS[1]}_wanted.csv')
+        os.remove(f'{path}/{KEYWORDS[0]}_saramin.csv')
+        os.remove(f'{path}/{KEYWORDS[1]}_saramin.csv')
     else:
         st_info = st.info('생성된 파일이 있습니다.')
         time.sleep(1)
