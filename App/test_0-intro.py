@@ -166,7 +166,7 @@ KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 path = './src'
 if not os.path.exists(path):
     os.makedirs(path)
-now_csv_file = f'{path}/{now_name}.csv'
+now_csv_file = f'{path}/{now_name}_wanted.csv'
 
 # 버튼 클릭
 st.markdown('### 데이터 수집')
