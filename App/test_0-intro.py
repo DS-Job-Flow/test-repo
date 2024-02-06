@@ -163,7 +163,7 @@ def Wanted(KEYWORD):
 KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 
 # 빈 폴더 및 파일 생성
-path = './src'
+path = '../src'
 if not os.path.exists(path):
     os.makedirs(path)
 now_csv_file = f'{path}/{now_name}_wanted.csv'
