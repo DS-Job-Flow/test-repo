@@ -2,12 +2,15 @@ import os
 import time
 import pandas as pd
 import streamlit as st
+from stqdm import stqdm
+from glob import glob
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 options = Options()
 options.add_argument('--disable-popup-blocking')
@@ -98,7 +101,7 @@ def Wanted(KEYWORD):
     # 공고 개수
     num = driver.find_element(By.XPATH, '//*[@id="search_tabpanel_position"]/div/div[1]/h2').text
     num = int(num.replace('포지션', ''))
-    for i in range(1, num+1):
+    for i in stqdm(range(1, num+1), desc='링크, 타이틀, 회사, 위치'):
         try:
             # 링크
             p_0 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a').get_attribute('href')
@@ -126,17 +129,31 @@ def Wanted(KEYWORD):
     elem_return_0('위치', Loc)
 
     # 데이터 수집
-    Ctn = [] # 공고내용
+    Ctn_0 = [] # 주요업무
+    Ctn_1 = [] # 자격요건
+    Ctn_2 = [] # 우대사항
 
-    for i in Lin:
-        driver.get(i)
-        driver.implicitly_wait(2)
+    for i in stqdm(range(num), desc='주요업무, 자격요건, 우대사항'):
+        driver.get(Lin[i])
         scroll_one(driver)
+        time.sleep(1)
+        execute = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[1]/div/section/section/article[1]/div/button/span[2]')
+        driver.execute_script("arguments[0].click();", execute)
+        time.sleep(1)
 
-        # 공고내용
         try:
-            p_4 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[1]/div[1]/div[1]/div[2]/section').text
-            Ctn.append(p_4)
+            # 주요업무
+            p_4 = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[1]/div/section/section/article[1]/div/div[1]').text
+            Ctn_0.append(p_4)
+
+            # 자격요건
+            p_5 = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[1]/div/section/section/article[1]/div/div[2]').text
+            Ctn_1.append(p_5)
+
+            # 우대사항
+            p_6 = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[1]/div/section/section/article[1]/div/div[3]').text
+            Ctn_2.append(p_6)
+
         except Exception as e:
             st.write(e)
             break
@@ -144,13 +161,17 @@ def Wanted(KEYWORD):
     driver.close()
 
     # 데이터 출력
-    elem_return_1('공고내용', Ctn)
+    elem_return_1('주요업무', Ctn_0)
+    elem_return_1('자격요건', Ctn_1)
+    elem_return_1('우대사항', Ctn_2)
 
     # 데이터프레임 생성
     df = pd.DataFrame({
         'Title' : Tit,
         'Company' : Com,
-        'Content' : Ctn,   
+        'Content_0' : Ctn_0, 
+        'Content_1' : Ctn_1, 
+        'Content_2' : Ctn_2,   
         'Link' : Lin,
         'Location' : Loc,
         'label' : f'{KEYWORD}',
@@ -159,7 +180,7 @@ def Wanted(KEYWORD):
     keyword_csv_file = f'{path}/{KEYWORD}.csv'
     df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
 
-    return Tit, Com, Ctn, Lin, Loc
+    return Tit, Com, Ctn_0, Ctn_1, Ctn_2, Lin, Loc
 
 
 
@@ -167,20 +188,22 @@ def Wanted(KEYWORD):
 
 
 
-## st.button()
+## st.button()    
 # 빈 폴더 및 파일 생성
 now = datetime.now()
 now_name = now.strftime('%Y%m%d')
 path = '../src'
 if not os.path.exists(path):
     os.makedirs(path)
-now_csv_file = f'{path}/{now_name}_wanted.csv'
 
 # 버튼 클릭
 KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 st.markdown('### 데이터 수집')
 if st.button('크롤링 실행'):
-    if not os.path.exists(now_csv_file):
+    if not os.path.exists(f'{path}/{now_name}_wanted.csv'):
+        files_del = glob(f'{path}/*.csv')
+        for file_del in files_del:
+            os.remove(file_del)
         # 원티드 크롤링 시작 
         for KEYWORD in KEYWORDS:
             st_info = st.info(f'원티드 "{KEYWORD}" 크롤링 진행 중')
@@ -197,14 +220,14 @@ if st.button('크롤링 실행'):
         DA = pd.read_csv(f'{path}/{KEYWORDS[0]}.csv')
         DS = pd.read_csv(f'{path}/{KEYWORDS[1]}.csv')
         df = pd.concat([DA, DS], axis=0)
-        df.to_csv(now_csv_file, index=False, encoding='utf-8-sig')
-        df = pd.read_csv(now_csv_file)
+        df.to_csv(f'{path}/{now_name}_wanted.csv', index=False, encoding='utf-8-sig')
+        df = pd.read_csv(f'{path}/{now_name}_wanted.csv')
 
-        # Data Preprocessing: Location
+        # 원티드 Location 전처리 
         for i in range(0, len(df)):
             s_0 = df.Location[i].split(' · ')
             df.Location[i] = s_0[0]
-        df.to_csv(now_csv_file, index=False, encoding='utf-8-sig')
+        df.to_csv(f'{path}/{now_name}_wanted.csv', index=False, encoding='utf-8-sig')
 
         time.sleep(1)
         st_info.empty()
@@ -219,4 +242,3 @@ if st.button('크롤링 실행'):
         st_info = st.info('생성된 파일이 있습니다.')
         time.sleep(1)
         st_info.empty()
-st.markdown('---')
