@@ -13,10 +13,6 @@ options = Options()
 options.add_argument('--disable-popup-blocking')
 
 
-now = datetime.now()
-now_name = now.strftime('%Y%m%d')
-
-
 ## page setting
 st.set_page_config(
     page_title='Intro'
@@ -28,7 +24,6 @@ st.write('')
 ## 스트림릿 사용 방법 링크 제공
 st.markdown('### Streamlit 사용 방법')
 st.write('이 페이지를 활용하는 방법에 대해 알아보려면 [해당 링크](https://balanced-park-5a8.notion.site/c2f2b1a1677a464b8d80e225d296f803#0a35451ece3a4dc9b9fbf4bdfd92b7b7)를 참조하세요.')
-
 st.write('')
 st.write('')
 
@@ -39,6 +34,9 @@ st.write('OpenAI API Key 발급 방법에 대해 알아보려면 [해당 링크]
 st.write('')
 st.write('')
 
+
+
+###########################################################################################
 
 
 
@@ -73,12 +71,17 @@ def elem_return_1(Name, List):
     return print(f'\n{Name} *** {len(List)}')
 
 
+
+###########################################################################################
+
+
+
 ## 원티드 수집
 def Wanted(KEYWORD):
 
     # webdriver 실행
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),
-                              options=options)
+                              options=options,)
     driver.get(f'https://www.wanted.co.kr/search?query={KEYWORD}&tab=position')
     driver.implicitly_wait(2)
     scroll(driver)
@@ -159,41 +162,45 @@ def Wanted(KEYWORD):
     return Tit, Com, Ctn, Lin, Loc
 
 
-## st.button()
-KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 
+###########################################################################################
+
+
+
+## st.button()
 # 빈 폴더 및 파일 생성
+now = datetime.now()
+now_name = now.strftime('%Y%m%d')
 path = '../src'
 if not os.path.exists(path):
     os.makedirs(path)
 now_csv_file = f'{path}/{now_name}_wanted.csv'
 
 # 버튼 클릭
+KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 st.markdown('### 데이터 수집')
 if st.button('크롤링 실행'):
     if not os.path.exists(now_csv_file):
-        # 크롤링 시작 
-        st_info = st.info('크롤링 진행 중')
+        # 원티드 크롤링 시작 
         for KEYWORD in KEYWORDS:
-            Tit, Com, Ctn, Lin, Loc = Wanted(KEYWORD)
+            st_info = st.info(f'원티드 "{KEYWORD}" 크롤링 진행 중')
+            Wanted(KEYWORD)
 
-        time.sleep(1)
-        st_info.empty()
-        st_success = st.success('크롤링 완료')
-        time.sleep(1)
-        st_success.empty()
+            time.sleep(1)
+            st_info.empty()
+            st_success = st.success(f'원티드 "{KEYWORD}" 크롤링 진행 완료')
+            time.sleep(1)
+            st_success.empty()
 
-        # Data Preprocessing
-        # merge
-        st_info = st.info('데이터 처리 중')
-
+        # File Merge
+        st_info = st.info('원티드 데이터 처리 중')
         DA = pd.read_csv(f'{path}/{KEYWORDS[0]}.csv')
         DS = pd.read_csv(f'{path}/{KEYWORDS[1]}.csv')
         df = pd.concat([DA, DS], axis=0)
         df.to_csv(now_csv_file, index=False, encoding='utf-8-sig')
         df = pd.read_csv(now_csv_file)
 
-        # Location
+        # Data Preprocessing: Location
         for i in range(0, len(df)):
             s_0 = df.Location[i].split(' · ')
             df.Location[i] = s_0[0]
@@ -201,21 +208,15 @@ if st.button('크롤링 실행'):
 
         time.sleep(1)
         st_info.empty()
-        st_success = st.success('데이터 처리 완료')
+        st_success = st.success('원티드 데이터 처리 완료')
         time.sleep(1) 
         st_success.empty()
 
-        # file remove
+        # File Remove
         os.remove(f'{path}/{KEYWORDS[0]}.csv')
         os.remove(f'{path}/{KEYWORDS[1]}.csv')
     else:
         st_info = st.info('생성된 파일이 있습니다.')
         time.sleep(1)
         st_info.empty()
-
 st.markdown('---')
-
-
-## 페이지 하단에 추가적인 정보나 안내문구
-st.write('')
-st.caption('이 페이지는 DS 커리어 분석 페이지의 시작점이며, 사용자가 편리하게 API 키를 입력하고 기본적인 사용 방법을 알 수 있도록 돕습니다.')
