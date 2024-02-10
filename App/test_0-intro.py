@@ -199,10 +199,13 @@ if not os.path.exists(path):
 KEYWORDS = ['데이터 분석가', '데이터 사이언티스트']
 st.markdown('### 데이터 수집')
 if st.button('크롤링 실행'):
+
+    # 원티드 파일 제거
     if not os.path.exists(f'{path}/{now_name}_wanted.csv'):
         files_del = glob(f'{path}/*.csv')
         for file_del in files_del:
             os.remove(file_del)
+
         # 원티드 크롤링 시작 
         for KEYWORD in KEYWORDS:
             st_info = st.info(f'원티드 "{KEYWORD}" 크롤링 진행 중')
@@ -241,3 +244,7 @@ if st.button('크롤링 실행'):
         st_info = st.info('생성된 파일이 있습니다.')
         time.sleep(1)
         st_info.empty()
+
+    # 사람인 파일 제거
+    if not os.path.exists(f'{path}/{now_name}_???.csv'):
+        pass
