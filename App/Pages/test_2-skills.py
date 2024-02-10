@@ -1,8 +1,8 @@
+import os
 import time
 import openai
 import pandas as pd
 import streamlit as st
-from tqdm import tqdm
 from datetime import datetime
 from openai import OpenAI
 
@@ -15,9 +15,9 @@ now_name = now.strftime('%Y%m%d')
 
 ## page setting
 st.set_page_config(
-    page_title='ChatGPT Prompt Engineering'
+    page_title='채용공고 요약 결과 확인'
 )
-st.title('ChatGPT Prompt Engineering')
+st.title('채용공고 요약 결과 확인')
 st.write('')
 
 ## 데이터프레임 가져오기
@@ -144,7 +144,12 @@ def summary_prompt(data, lab, skl):
         L.append(response)
 
         cond += 10
+
     st_info.empty()
+    st_success = st.success('문장 요약 완료')
+    time.sleep(1)
+    st_success.empty()
+
 
     return L
 
@@ -171,6 +176,7 @@ plf = st.selectbox(
 )
 state['plf'] = plf
 
+# 원티드 선택 시
 if state['plf'] == '원티드':
 
     # 레이블 선택
@@ -194,10 +200,37 @@ if state['plf'] == '원티드':
 
     # st.button()
     if st.button('확인'):
-        st.write('') 
-        generate = summary_prompt(df, state['lab'], state['skl'])
-        g_join_split = ','.join(generate)
-        st.text(g_join_split)
+        summary_txt = f'{path}/{now_name}_wanted_{state["lab"]}_{state["skl"]}_summary.txt'
 
-        # 문장 요약 저장
-        g_join_split.to_csv(f'{path}/{now_name}_wanted_{skl}.csv', index=False, encoding='utf-8-sig')
+        # 문장 요약 파일이 없으면
+        if not os.path.exists(summary_txt):
+            generate = summary_prompt(df, state['lab'], state['skl'])
+            g_join_split = ','.join(generate)
+
+            # 문장 요약 저장
+            with open(summary_txt, 'w', encoding='utf-8') as file:
+                file.write(g_join_split)
+            st.write('')
+            st.text(g_join_split)
+
+        # 문장 요약 파일이 있으면
+        else:
+            st_info = st.info('생성된 파일이 있습니다.')
+            time.sleep(1)
+            st_info.empty()
+
+            # 문장 요약 불러오기
+            with open(summary_txt, 'r', encoding='utf-8') as file:
+                g_join_split = file.read()
+            st.write('')
+            st.text(g_join_split)
+
+        # 추가 사항
+        # 1. 문장 유사도 분석 (코사인 유사도)
+        # 2. 높은 유사도를 가지는 문장끼리 모아서 프롬프트를 사용해 한 문장으로 요약
+        # 3. 출력 (st.text(g_join_split)는 삭제해야 됨)
+
+# 사람인 선택 시
+if state['plf'] == '사람인':
+    pass
+    # 코드 수정 필요 (바로 못 붙임)
