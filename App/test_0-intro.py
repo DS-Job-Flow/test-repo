@@ -187,6 +187,16 @@ def Wanted(KEYWORD):
 
 
 
+## 캐치 수집
+def Catch(KEYWORD):
+    pass
+
+
+
+###########################################################################################
+
+
+
 ## st.button()    
 # 빈 폴더 및 파일 생성
 now = datetime.now()
@@ -245,6 +255,9 @@ if st.button('크롤링 실행'):
         time.sleep(1)
         st_info.empty()
 
-    # 사람인 파일 제거
+    # 캐치 파일 제거
     if not os.path.exists(f'{path}/{now_name}_???.csv'):
+        pass
+        
+        # 캐치 크롤링 시작
         pass
