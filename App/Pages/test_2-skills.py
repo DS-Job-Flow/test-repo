@@ -32,16 +32,9 @@ except FileNotFoundError:
 
 
 
-## OpenAI 입력 섹션
-ORGANIZATION_ID = st.text_input(
-    'Organization ID',
-    placeholder='org-...xxxx',
-)
-OPENAI_API_KEY = st.text_input(
-    'OpenAI API Key', 
-    placeholder='sk-...xxxx',
-    type='password',
-)
+## OpenAI Org-ID, API Key
+ORGANIZATION_ID = 'your org-xxx'
+OPENAI_API_KEY = 'your sk-xxx'
 
 client = OpenAI(
     organization = ORGANIZATION_ID,
@@ -49,7 +42,7 @@ client = OpenAI(
 )
 
 ## API Key 저장 및 확인
-if st.button('적용'):
+if st.button('OpenAI API Key 검증'):
     try:
         openai.api_key = OPENAI_API_KEY
         response = client.chat.completions.create(
@@ -170,7 +163,7 @@ state = {
 # 플랫폼 선택
 plf = st.selectbox(
     '플랫폼',
-    ('원티드', '사람인'),
+    ('원티드', '캐치'),
     index=None,
     placeholder='플랫폼을 선택해 주세요.'
 )
@@ -230,7 +223,6 @@ if state['plf'] == '원티드':
         # 2. 높은 유사도를 가지는 문장끼리 모아서 프롬프트를 사용해 한 문장으로 요약
         # 3. 출력 (st.text(g_join_split)는 삭제해야 됨)
 
-# 사람인 선택 시
-if state['plf'] == '사람인':
+# 캐치 선택 시
+if state['plf'] == '캐치':
     pass
-    # 코드 수정 필요 (바로 못 붙임)
