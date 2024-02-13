@@ -123,11 +123,24 @@ def Wanted(KEYWORD, data_wanted):
         'Location' : data_wanted['Loc'],
         'label' : f'{KEYWORD}'         
     })
+<<<<<<< HEAD
+=======
+
+>>>>>>> ce67bb00ce720aa80ebf23f919faf98329d2fd60
     keyword_csv_file = f'{path}/{KEYWORD}_wanted.csv'
     df_wanted.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
     df_wanted = pd.read_csv(keyword_csv_file)
     
     return data_wanted
+<<<<<<< HEAD
+=======
+
+    keyword_csv_file = f'{path}/{KEYWORD}.csv'
+    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+
+    return data
+
+>>>>>>> ce67bb00ce720aa80ebf23f919faf98329d2fd60
 
 ## 사람인, 대기업 수집
 def Saramin_logic(front_url, mid_url, back_url, page, data):
