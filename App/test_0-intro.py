@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import pandas as pd
 import streamlit as st
 from stqdm import stqdm
@@ -10,6 +11,8 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 options = Options()
 options.add_argument('--disable-popup-blocking')
@@ -185,12 +188,169 @@ def Wanted(KEYWORD):
 
 ###########################################################################################
 
+def collect_job_information():
+    # Chrome WebDriver 설정
+    service = ChromeService(ChromeDriverManager().install())
+    
+    driver = webdriver.Chrome(service=service)
+    # 웹 페이지 접속
+    driver.get("https://www.catch.co.kr/NCS/RecruitInformation")
 
+    # 필요한 버튼 클릭을 위한 과정
+    steps = [
+        ('//*[@id="Contents"]/div[3]/div/div[1]/button[4]', 1),
+        ('//*[@id="Contents"]/div[3]/div/div[2]/button[3]', 1),
+        ('//*[@id="Contents"]/div[3]/div/div[2]/div[3]/button', 1),
+        ('//*[@id="Contents"]/div[3]/div/div[2]/div[4]/div[1]/dl/dd[3]/div[7]/a', 1),
+        ('//*[@id="Contents"]/div[3]/div/div[2]/div[4]/div[1]/dl/dd[3]/div[7]/div/span[13]', 1),
+        ('//*[@id="Contents"]/div[3]/div/div[2]/div[4]/div[2]/button[2]', 1)
+    ]
+    
+    for xpath, delay in steps:
+        driver.find_element(By.XPATH, xpath).click()
+        time.sleep(delay)
+
+    # 데이터를 저장할 리스트 초기화
+    Com = []
+    Tit = []
+    Lin = []
+    Cat = []
+
+    # 페이지에 있는 모든 tr 요소를 가져옵니다.
+    rows = driver.find_elements(By.XPATH, '//*[@id="recr_result"]/table/tbody/tr')
+    
+    # 각 행에 대해 필요한 정보 추출
+    for i in range(1, len(rows) + 1):
+        p_2 = driver.find_element(By.XPATH, f'//*[@id="recr_result"]/table/tbody/tr[{i}]/td[1]/p/a').text
+        p_1 = driver.find_element(By.XPATH, f'//*[@id="recr_result"]/table/tbody/tr[{i}]/td[2]/a/p[1]').text
+        p_0 = driver.find_element(By.XPATH, f'//*[@id="recr_result"]/table/tbody/tr[{i}]/td[2]/a').get_attribute('href')
+        
+        # 분류 데이터 추출
+        _p_3 = driver.find_elements(By.XPATH, f'//*[@id="recr_result"]/table/tbody/tr[{i}]/td[1]/a/p[2] | //*[@id="recr_result"]/table/tbody/tr[{i}]/td[2]/a/p[2]')
+        __p_3 = [ele.text for ele in _p_3]
+        p_3 = ', '.join(__p_3)  # 분류를 하나의 문자열로 결합
+
+        # 수집된 데이터를 리스트에 추가
+        Com.append(p_2)
+        Tit.append(p_1)
+        Lin.append(p_0)
+        Cat.append(p_3)
+        
+        elem_return_0('링크', Lin)
+        elem_return_0('타이틀', Tit)
+        elem_return_0('회사', Com)
+        elem_return_0('역할', Cat)
+        
+    driver.quit()
+
+    return Tit, Com, Lin, Cat
+
+def collect_texts_from_iframes(Lin):
+    # WebDriver 설정
+    service = ChromeService(ChromeDriverManager().install())
+    
+    driver = webdriver.Chrome(service=service)
+    
+    Ctn = []
+
+    for url in Lin:
+        driver.get(url)
+        
+        # URL에서 숫자 추출
+        match = re.search(r'RecruitInfoDetails/(\d+)', url)
+        if match:
+            number = match.group(1)
+            
+            # iframe이 로드될 때까지 기다림
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, f'//*[@id="view1_{number}"]/div/iframe'))
+            )
+            
+            # iframe으로 컨텍스트 전환
+            iframe = driver.find_element(By.XPATH, f'//*[@id="view1_{number}"]/div/iframe')
+            driver.switch_to.frame(iframe)
+            
+            # iframe 내의 모든 텍스트 추출 및 리스트에 추가
+            iframe_text = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, 'body'))
+            ).text
+            Ctn.append(iframe_text)
+            
+            # 메인 컨텐츠로 컨텍스트 다시 전환
+            driver.switch_to.default_content()
+        else:
+            Ctn.append("")
+    
+    # WebDriver 종료
+    driver.quit()
+    
+    return Ctn
+
+def extract_sections(text):
+    # 자격요건 관련 키워드 패턴
+    requirements_pattern = r"(자격요건|지원자격|필수 경험과 역량|Required Skills|지원 자격)"
+    # 우대사항 관련 키워드 패턴
+    preferred_pattern = r"(우대사항|\[공통 우대 사항\]|채용하고 싶은 사람)"
+    
+    # 자격요건 섹션 추출
+    requirements_match = re.search(requirements_pattern, text, re.IGNORECASE)
+    preferred_match = re.search(preferred_pattern, text, re.IGNORECASE)
+    
+    requirements_index = requirements_match.start() if requirements_match else len(text)
+    preferred_index = preferred_match.start() if preferred_match else len(text)
+    
+    # 자격요건 및 우대사항 텍스트 추출
+    requirements_text = text[requirements_index:preferred_index].strip() if requirements_match else ""
+    preferred_text = text[preferred_index:].strip() if preferred_match else ""
+    
+    return requirements_text, preferred_text
+
+# Text 컬럼에서 기술 스택 추출 함수
+def extract_tech_stacks_from_text(text, tech_stacks):
+    found_stacks = []
+    for stack in tech_stacks:
+        if re.search(stack, text, re.IGNORECASE):
+            found_stacks.append(stack)
+    return ', '.join(found_stacks)
+
+# 가능한 기술 스택 목록 정의
 
 ## 캐치 수집
-def Catch(KEYWORD):
-    pass
+def Catch():
+    Tit, Com, Lin, Cat = collect_job_information()
+    Ctn = collect_texts_from_iframes(Lin)
+    
+    # 데이터 프레임 생성
+    df = pd.DataFrame({        
+        'Title': Tit,
+        'Company': Com,
+        'Link': Lin,
+        'label': Cat,
+        'Content' : Ctn, 
+        'platform': 'catch',
+    })
+    
+    tech_stacks = [
+    'Python', 'Java(?:Script)?', 'C\+\+', 'C#', 'PHP', 'Ruby', 'Swift', 'Kotlin', 'TypeScript', 'Scala', 'Go', 'Rust', 'Dart', 'R',
+    'HTML', 'CSS', 'React(?:\.js)?', 'Angular(?:\.js)?', 'Vue(?:\.js)?', 'jQuery', 'Bootstrap', 'SASS', 'LESS', 'Node\.js', 'Express\.js',
+    'Django', 'Flask', 'Spring Boot', 'Laravel', 'Ruby on Rails', 'ASP\.NET', 'Phoenix', 'TensorFlow', 'PyTorch', 'Keras', 'scikit-learn',
+    'OpenCV', 'NLTK', 'Spacy', 'GPT(?:-\d+)?', 'BERT', 'FastAPI', 'GraphQL', 'RESTful API?', 'Apache Kafka', 'RabbitMQ', 'Docker', 'Kubernetes',
+    'AWS', 'Google Cloud Platform', 'Azure', 'Firebase', 'MongoDB', 'PostgreSQL', 'MySQL', 'SQLite', 'Oracle', 'Microsoft SQL Server', 'Cassandra',
+    'Redis', 'Elasticsearch', 'Git(?:Hub|Lab)?', 'Bitbucket', 'JIRA', 'Confluence', 'Slack', 'Microsoft Teams', 'Zoom', 'Jenkins', 'Travis CI',
+    'CircleCI', 'Ansible', 'Terraform', 'Prometheus', 'Grafana'
+    ]
+    
+    # 각 텍스트에 대해 "자격요건"과 "우대사항" 추출 및 새 컬럼에 저장
+    df['Content_1'], df['Content_2'] = zip(*df['Content'].apply(extract_sections))
 
+    # 각 텍스트에 대해 기술 스택 추출 및 새 컬럼에 저장
+    df['Content_0'] = df['Content'].apply(lambda x: extract_tech_stacks_from_text(x, tech_stacks))
+
+    keyword_csv_file = f'{path}/major.csv'
+    df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
+    
+    return df
+    
 
 
 ###########################################################################################
@@ -256,8 +416,33 @@ if st.button('크롤링 실행'):
         st_info.empty()
 
     # 캐치 파일 제거
-    if not os.path.exists(f'{path}/{now_name}_???.csv'):
-        pass
+    if not os.path.exists(f'{path}/{now_name}_major.csv'):
+        files_del = glob(f'{path}/*_major.csv')
+        for file_del in files_del:
+            os.remove(file_del)
         
         # 캐치 크롤링 시작
-        pass
+        st_info = st.info('네카라쿠배당토 크롤링 진행 중')
+        Catch()
+
+        time.sleep(1)
+        st_info.empty()
+
+        # File Merge
+        st_info = st.info('네카라쿠배당토 데이터 처리 중')
+        MAJOR = pd.read_csv(f'{path}/major.csv')
+        MAJOR.to_csv(f'{path}/{now_name}_major.csv', index=False, encoding='utf-8-sig')
+        df = pd.read_csv(f'{path}/{now_name}_major.csv')
+
+        time.sleep(1)
+        st_info.empty()
+        st_success = st.success('네카라쿠배당토 데이터 처리 완료')
+        time.sleep(1) 
+        st_success.empty()
+
+        # File Remove
+        os.remove(f'{path}/major.csv')
+    else:
+        st_info = st.info('생성된 파일이 있습니다.')
+        time.sleep(1)
+        st_info.empty()
