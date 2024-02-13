@@ -4,6 +4,7 @@ import openai
 import pandas as pd
 import streamlit as st
 from datetime import datetime
+from glob import glob
 from openai import OpenAI
 
 
@@ -193,15 +194,18 @@ if state['plf'] == '원티드':
 
     # st.button()
     if st.button('확인'):
-        summary_txt = f'{path}/{now_name}_wanted_{state["lab"]}_{state["skl"]}_summary.txt'
 
         # 문장 요약 파일이 없으면
-        if not os.path.exists(summary_txt):
+        # 파일 제거
+        if not os.path.exists(f'{path}/{now_name}_wanted_{state["lab"]}_{state["skl"]}_summary.txt'):
+            files_del = glob(f'{path}/*_wanted_{state["lab"]}_{state["skl"]}_summary.txt')
+            for file_del in files_del:
+                os.remove(file_del)
             generate = summary_prompt(df, state['lab'], state['skl'])
             g_join_split = ','.join(generate)
 
             # 문장 요약 저장
-            with open(summary_txt, 'w', encoding='utf-8') as file:
+            with open(f'{path}/{now_name}_wanted_{state["lab"]}_{state["skl"]}_summary.txt', 'w', encoding='utf-8') as file:
                 file.write(g_join_split)
             st.write('')
             st.text(g_join_split)
@@ -213,7 +217,7 @@ if state['plf'] == '원티드':
             st_info.empty()
 
             # 문장 요약 불러오기
-            with open(summary_txt, 'r', encoding='utf-8') as file:
+            with open(f'{path}/{now_name}_wanted_{state["lab"]}_{state["skl"]}_summary.txt', 'r', encoding='utf-8') as file:
                 g_join_split = file.read()
             st.write('')
             st.text(g_join_split)
