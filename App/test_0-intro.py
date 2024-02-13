@@ -212,7 +212,7 @@ if st.button('크롤링 실행'):
 
     # 원티드 파일 제거
     if not os.path.exists(f'{path}/{now_name}_wanted.csv'):
-        files_del = glob(f'{path}/*.csv')
+        files_del = glob(f'{path}/*_wanted.csv')
         for file_del in files_del:
             os.remove(file_del)
 
