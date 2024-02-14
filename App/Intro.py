@@ -438,7 +438,7 @@ if st.button('크롤링 실행'):
         os.remove(f'{path}/{KEYWORDS[0]}.csv')
         os.remove(f'{path}/{KEYWORDS[1]}.csv')
     else:
-        st_info = st.info('생성된 파일이 있습니다.')
+        st_info = st.info('생성된 파일이 있습니다: 원티드')
         time.sleep(1)
         st_info.empty()
 
@@ -470,6 +470,6 @@ if st.button('크롤링 실행'):
         # File Remove
         os.remove(f'{path}/major.csv')
     else:
-        st_info = st.info('생성된 파일이 있습니다.')
+        st_info = st.info('생성된 파일이 있습니다: 네카라쿠배당토')
         time.sleep(1)
         st_info.empty()
