@@ -3,7 +3,7 @@ import streamlit as st
 from datetime import datetime
 
 
-path = 'DS_Career/test-repo/src'
+path = '../src'
 
 now = datetime.now()
 now_name = now.strftime('%Y%m%d')
