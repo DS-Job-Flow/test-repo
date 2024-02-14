@@ -1,6 +1,6 @@
 import os
-import time
 import re
+import time
 import pandas as pd
 import streamlit as st
 from stqdm import stqdm
@@ -188,6 +188,9 @@ def Wanted(KEYWORD):
 
 ###########################################################################################
 
+
+
+## 캐치 겉에 수집
 def collect_job_information():
     # Chrome WebDriver 설정
     service = ChromeService(ChromeDriverManager().install())
@@ -245,6 +248,13 @@ def collect_job_information():
 
     return Tit, Com, Lin, Cat
 
+
+
+###########################################################################################
+
+
+
+## 캐치 공고내용 수집
 def collect_texts_from_iframes(Lin):
     # WebDriver 설정
     service = ChromeService(ChromeDriverManager().install())
@@ -286,6 +296,13 @@ def collect_texts_from_iframes(Lin):
     
     return Ctn
 
+
+
+###########################################################################################
+
+
+
+## 캐치 자격요건, 우대사항 추출
 def extract_sections(text):
     # 자격요건 관련 키워드 패턴
     requirements_pattern = r"(자격요건|지원자격|필수 경험과 역량|Required Skills|지원 자격)"
@@ -305,7 +322,13 @@ def extract_sections(text):
     
     return requirements_text, preferred_text
 
-# Text 컬럼에서 기술 스택 추출 함수
+
+
+###########################################################################################
+
+
+
+## 캐치 자격요건, 우대사항에서 기술스택툴 추출
 def extract_tech_stacks_from_text(text, tech_stacks):
     found_stacks = []
     for stack in tech_stacks:
@@ -313,10 +336,14 @@ def extract_tech_stacks_from_text(text, tech_stacks):
             found_stacks.append(stack)
     return ', '.join(found_stacks)
 
-# 가능한 기술 스택 목록 정의
+
+
+###########################################################################################
+
+
 
 ## 캐치 수집
-def Catch():
+def Catch(KEYWORD):
     Tit, Com, Lin, Cat = collect_job_information()
     Ctn = collect_texts_from_iframes(Lin)
     
@@ -350,7 +377,7 @@ def Catch():
     df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
     
     return df
-    
+
 
 
 ###########################################################################################
