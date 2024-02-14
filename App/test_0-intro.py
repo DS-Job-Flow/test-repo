@@ -369,7 +369,7 @@ def Catch():
 # 빈 폴더 및 파일 생성
 now = datetime.now()
 now_name = now.strftime('%Y%m%d')
-path = 'DS_Career/test-repo/src'
+path = '../src'
 if not os.path.exists(path):
     os.makedirs(path)
 
