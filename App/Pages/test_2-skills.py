@@ -229,4 +229,8 @@ if state['plf'] == '원티드':
 
 # 캐치 선택 시
 if state['plf'] == '캐치':
+<<<<<<< HEAD
     pass
+=======
+    pass
+>>>>>>> 3690f10f39b1f19eee147e58375636682635ea4c
