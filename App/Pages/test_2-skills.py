@@ -164,7 +164,7 @@ state = {
 # 플랫폼 선택
 plf = st.selectbox(
     '플랫폼',
-    ('원티드', '캐치'),
+    ('원티드', 'None'),
     index=None,
     placeholder='플랫폼을 선택해 주세요.'
 )
@@ -227,6 +227,6 @@ if state['plf'] == '원티드':
         # 2. 높은 유사도를 가지는 문장끼리 모아서 프롬프트를 사용해 한 문장으로 요약
         # 3. 출력 (st.text(g_join_split)는 삭제해야 됨)
 
-# 캐치 선택 시
-if state['plf'] == '캐치':
+# None 선택 시
+if state['plf'] == 'None':
     pass
