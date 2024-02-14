@@ -3,7 +3,7 @@ import streamlit as st
 from datetime import datetime
 
 
-path = 'DS_Career/test-repo/src'
+path = '../src'
 
 now = datetime.now()
 now_name = now.strftime('%Y%m%d')
@@ -22,7 +22,7 @@ try:
     df_major = pd.read_csv(f'{path}/{now_name}_major.csv')
 except FileNotFoundError:
     st.error('생성된 파일이 없습니다. Intro 페이지에서 크롤링 실행 버튼을 눌러주세요.')
-
+    
 
 
 ###########################################################################################
