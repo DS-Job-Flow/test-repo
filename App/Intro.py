@@ -343,7 +343,7 @@ def extract_tech_stacks_from_text(text, tech_stacks):
 
 
 ## 캐치 수집
-def Catch(KEYWORD):
+def Catch():
     Tit, Com, Lin, Cat = collect_job_information()
     Ctn = collect_texts_from_iframes(Lin)
     
