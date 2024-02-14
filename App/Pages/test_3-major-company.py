@@ -14,9 +14,9 @@ now_name = now.strftime('%Y%m%d')
 
 ## page setting
 st.set_page_config(
-    page_title='네카라쿠배당토 채용공고 확인'
+    page_title='네카라쿠배당토 채용공고 요약 결과 확인'
 )
-st.title('네카라쿠배당토 채용공고 확인')
+st.title('네카라쿠배당토 채용공고 요약 결과 확인')
 st.write('')
 
 ## 데이터프레임 가져오기
