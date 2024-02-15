@@ -304,21 +304,28 @@ def collect_texts_from_iframes(Lin):
 
 ## 캐치 자격요건, 우대사항 추출
 def extract_sections(text):
+    # 문단이나 섹션의 시작을 나타내는 구분자 정의
+    section_delimiter_pattern = r"(■|\●)"
+    
     # 자격요건 관련 키워드 패턴
     requirements_pattern = r"(자격요건|지원자격|필수 경험과 역량|Required Skills|지원 자격)"
     # 우대사항 관련 키워드 패턴
     preferred_pattern = r"(우대사항|\[공통 우대 사항\]|채용하고 싶은 사람)"
     
-    # 자격요건 섹션 추출
+    # 자격요건 및 우대사항 섹션 추출
     requirements_match = re.search(requirements_pattern, text, re.IGNORECASE)
     preferred_match = re.search(preferred_pattern, text, re.IGNORECASE)
     
     requirements_index = requirements_match.start() if requirements_match else len(text)
     preferred_index = preferred_match.start() if preferred_match else len(text)
     
-    # 자격요건 및 우대사항 텍스트 추출
     requirements_text = text[requirements_index:preferred_index].strip() if requirements_match else ""
     preferred_text = text[preferred_index:].strip() if preferred_match else ""
+    
+    # 우대사항 이후의 섹션 시작 구분자 찾기
+    next_section_match = re.search(section_delimiter_pattern, text[preferred_index:], re.IGNORECASE)
+    if next_section_match:
+        preferred_text = text[preferred_index:preferred_index + next_section_match.start()].strip()
     
     return requirements_text, preferred_text
 
@@ -329,6 +336,7 @@ def extract_sections(text):
 
 
 ## 캐치 자격요건, 우대사항에서 기술스택툴 추출
+
 def extract_tech_stacks_from_text(text, tech_stacks):
     found_stacks = []
     for stack in tech_stacks:
