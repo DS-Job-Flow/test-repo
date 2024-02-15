@@ -188,4 +188,6 @@ if state['plf'] == '캐치':
             st.text(cond.Content_2.tolist()[0])
             st.write('')
             link_click = cond.Link.tolist()
+
             st.write(f'채용정보가 더 궁금하다면 링크 클릭! 👉 [{link_click}]({link_click})')
+

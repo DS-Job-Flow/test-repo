@@ -1,6 +1,6 @@
 import os
-import time
 import re
+import time
 import pandas as pd
 import streamlit as st
 from stqdm import stqdm
@@ -188,6 +188,9 @@ def Wanted(KEYWORD):
 
 ###########################################################################################
 
+
+
+## 캐치 겉에 수집
 def collect_job_information():
     # Chrome WebDriver 설정
     service = ChromeService(ChromeDriverManager().install())
@@ -245,6 +248,13 @@ def collect_job_information():
 
     return Tit, Com, Lin, Cat
 
+
+
+###########################################################################################
+
+
+
+## 캐치 공고내용 수집
 def collect_texts_from_iframes(Lin):
     # WebDriver 설정
     service = ChromeService(ChromeDriverManager().install())
@@ -286,6 +296,13 @@ def collect_texts_from_iframes(Lin):
     
     return Ctn
 
+
+
+###########################################################################################
+
+
+
+## 캐치 자격요건, 우대사항 추출
 def extract_sections(text):
     # 문단이나 섹션의 시작을 나타내는 구분자 정의
     section_delimiter_pattern = r"(■|\●)"
@@ -313,7 +330,13 @@ def extract_sections(text):
     return requirements_text, preferred_text
 
 
-# Text 컬럼에서 기술 스택 추출 함수
+
+###########################################################################################
+
+
+
+## 캐치 자격요건, 우대사항에서 기술스택툴 추출
+
 def extract_tech_stacks_from_text(text, tech_stacks):
     found_stacks = []
     for stack in tech_stacks:
@@ -321,7 +344,11 @@ def extract_tech_stacks_from_text(text, tech_stacks):
             found_stacks.append(stack)
     return ', '.join(found_stacks)
 
-# 가능한 기술 스택 목록 정의
+
+
+###########################################################################################
+
+
 
 ## 캐치 수집
 def Catch():
@@ -358,7 +385,7 @@ def Catch():
     df.to_csv(keyword_csv_file, index=False, encoding='utf-8-sig')
     
     return df
-    
+
 
 
 ###########################################################################################
@@ -419,7 +446,7 @@ if st.button('크롤링 실행'):
         os.remove(f'{path}/{KEYWORDS[0]}.csv')
         os.remove(f'{path}/{KEYWORDS[1]}.csv')
     else:
-        st_info = st.info('생성된 파일이 있습니다.')
+        st_info = st.info('생성된 파일이 있습니다: 원티드')
         time.sleep(1)
         st_info.empty()
 
@@ -451,6 +478,6 @@ if st.button('크롤링 실행'):
         # File Remove
         os.remove(f'{path}/major.csv')
     else:
-        st_info = st.info('생성된 파일이 있습니다.')
+        st_info = st.info('생성된 파일이 있습니다: 네카라쿠배당토')
         time.sleep(1)
         st_info.empty()
