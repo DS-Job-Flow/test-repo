@@ -67,7 +67,7 @@ async def main(urls):
         return results
 
 # Streamlit 앱 설정
-path = 'DS_Career/test-repo/src/'  # 현재 작업 디렉토리에 맞게 경로 설정
+path = '../src'  # 현재 작업 디렉토리에 맞게 경로 설정
 now = datetime.now()
 now_name = now.strftime('%Y%m%d')
 
