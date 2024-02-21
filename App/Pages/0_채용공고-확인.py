@@ -22,7 +22,7 @@ try:
     df_major = pd.read_csv(f'{path}/{now_name}_major.csv')
 except FileNotFoundError:
     st.error('생성된 파일이 없습니다. Intro 페이지에서 크롤링 실행 버튼을 눌러주세요.')
-
+    
 
 
 ###########################################################################################
@@ -188,4 +188,6 @@ if state['plf'] == '캐치':
             st.text(cond.Content_2.tolist()[0])
             st.write('')
             link_click = cond.Link.tolist()
+
             st.write(f'채용정보가 더 궁금하다면 링크 클릭! 👉 [{link_click}]({link_click})')
+
