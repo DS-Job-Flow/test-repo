@@ -98,12 +98,11 @@ def Wanted(KEYWORD):
     Lin = [] # 링크
     Tit = [] # 타이틀
     Com = [] # 회사
-    Loc = [] # 위치
 
     # 공고 개수
     num = driver.find_element(By.XPATH, '//*[@id="search_tabpanel_position"]/div/div[1]/h2').text
     num = int(num.replace('포지션', ''))
-    for i in stqdm(range(1, num+1), desc='링크, 타이틀, 회사, 위치'):
+    for i in stqdm(range(1, num+1), desc='링크, 타이틀, 회사'):
         try:
             # 링크
             p_0 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a').get_attribute('href')
@@ -114,12 +113,8 @@ def Wanted(KEYWORD):
             Tit.append(p_1)
 
             # 회사
-            p_2 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/span[1]/span[1]').text
-            Com.append(p_2)                       
-
-            # 위치
-            p_3 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/span[1]/span[2]').text
-            Loc.append(p_3)                    
+            p_2 = driver.find_element(By.XPATH, f'//*[@id="search_tabpanel_position"]/div/div[4]/div[{i}]/a/div[2]/span[1]/span').text
+            Com.append(p_2)                                        
         except Exception as e:
             st.write(e)
             break
@@ -128,14 +123,14 @@ def Wanted(KEYWORD):
     elem_return_0('링크', Lin)
     elem_return_0('타이틀', Tit)
     elem_return_0('회사', Com)
-    elem_return_0('위치', Loc)
 
     # 데이터 수집
+    Loc = [] # 위치
     Ctn_0 = [] # 주요업무
     Ctn_1 = [] # 자격요건
     Ctn_2 = [] # 우대사항
 
-    for i in stqdm(range(num), desc='주요업무, 자격요건, 우대사항'):
+    for i in stqdm(range(num), desc='위치, 주요업무, 자격요건, 우대사항'):
         driver.get(Lin[i])
         scroll_one(driver)
         time.sleep(1)
@@ -144,6 +139,10 @@ def Wanted(KEYWORD):
         time.sleep(1)
 
         try:
+            # 위치
+            p_3 = driver.find_element(By.XPATH, f'//*[@id="__next"]/main/div[1]/div/section/header/div/div[1]/span[2]').text
+            Loc.append(p_3)   
+
             # 주요업무
             p_4 = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[1]/div/section/section/article[1]/div/div[1]').text
             Ctn_0.append(p_4)
@@ -163,6 +162,7 @@ def Wanted(KEYWORD):
     driver.close()
 
     # 데이터 출력
+    elem_return_0('위치', Loc)
     elem_return_1('주요업무', Ctn_0)
     elem_return_1('자격요건', Ctn_1)
     elem_return_1('우대사항', Ctn_2)
